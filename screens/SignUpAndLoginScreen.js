@@ -16,6 +16,7 @@ export default class SignUpAndLoginScreen extends React.Component{
             address:'',
             contact:'',
             confirmPassword:'',
+            currencyCode:""
         }
     }
     
@@ -44,7 +45,8 @@ export default class SignUpAndLoginScreen extends React.Component{
                 contact:this.state.contact,
                 user_name:this.state.username,
                 address:this.state.address,
-                IsBookRequestActive:false,
+                IsItemRequestActive:false,
+                currency_code:this.state.currencyCode
               })
               return  Alert.alert(
                     'User Added Successfully',
@@ -144,6 +146,16 @@ export default class SignUpAndLoginScreen extends React.Component{
                         })
                       }}
                   />
+                    <TextInput
+                      style={styles.formTextInput}
+                      placeholder ={"Country Currency Code"}
+                      maxLength ={8}
+                      onChangeText={(text)=>{
+                        this.setState({
+                        currencyCode: text
+                        })
+                      }}
+                    />
                   <View style={styles.modalBackButton}>
                     <TouchableOpacity
                       style={styles.registerButton}

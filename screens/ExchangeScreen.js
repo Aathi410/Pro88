@@ -17,6 +17,8 @@ export default class BookRequestScreen extends React.Component{
             exchangeId:'',
             userDocId:'',
             docId:'',
+            itemValue:"",
+            currencyCode:""
 
         }
     }
@@ -34,6 +36,7 @@ export default class BookRequestScreen extends React.Component{
             'description':description,
             "exchangeId"  : exchangeId,
             "item_status" : "requested",
+            "item_value"  : this.state.itemValue,
             "date"       : firebase.firestore.FieldValue.serverTimestamp()
         })
         await this.getExchangeRequest()
@@ -50,6 +53,7 @@ export default class BookRequestScreen extends React.Component{
         this.setState({
             itemName:'',
             description:'',
+            itemValue : ""
         })
 
         return Alert.alert(
@@ -82,14 +86,15 @@ export default class BookRequestScreen extends React.Component{
           querySnapshot.forEach(doc => {
             this.setState({
               IsExchangeRequestActive:doc.data().IsExchangeRequestActive,
-              userDocId : doc.id
+              userDocId : doc.id,
+              currencyCode: doc.data().currency_code
             })
           })
         })
       }
     
     getExchangeRequest =()=>{
-        var exchangeRequest=  db.collection('exchange_requests')
+        var exchangeRequest =  db.collection('exchange_requests')
         .where('user_name','==',this.state.userId).get()
         .then((snapshot)=>{
             snapshot.forEach((doc)=>{
@@ -98,7 +103,8 @@ export default class BookRequestScreen extends React.Component{
                         exchangeId : doc.data().exchangeId,
                         requestedItemName: doc.data().item_name,
                         itemStatus:doc.data().item_status,
-                        docId     : doc.id
+                        docId     : doc.id,
+                        itemValue : doc.data().item_value,
                     })
                 }
           })
@@ -115,7 +121,7 @@ export default class BookRequestScreen extends React.Component{
                 .then((snapshot)=>{
                     snapshot.forEach((doc) => {
                         var donorId  = doc.data().donor_id
-                        var itemname =  doc.data().item_name
+                        var itemName =  doc.data().item_name
                         db.collection('all_notifications').add({
                             targeted_user_id : donorId,
                             message : name +" " + lastName + " received the item " + itemName ,
@@ -128,14 +134,28 @@ export default class BookRequestScreen extends React.Component{
         })
     }
 
+
+    getData(){
+        fetch("http://data.fixer.io/api/latest?access_key=1f7dd48123a05ae588283b5e13fae944&format=1")
+        .then(response=>{
+          return response.json();
+        }).then(responseData =>{
+          var currencyCode = this.state.currencyCode
+          var currency = responseData.rates.INR
+          var value =  69 / currency
+          console.log(value);
+        })
+        }
+    
     componentDidMount(){
         this.getExchangeRequest()
         this.getIsExchangeRequestActive()
+        this.getData()
     }
     
     updateExchangeRequestStatus=()=>{
         db.collection('exchange_requests').doc(this.state.docId).update({
-            item_status : 'recieved'
+            item_status : 'recieved',
         })
         db.collection('users').where('user_name','==',this.state.userId).get()
         .then((snapshot)=>{
@@ -152,19 +172,24 @@ export default class BookRequestScreen extends React.Component{
         if (this.state.IsExchangeRequestActive === true){
             return(
                 <View style = {{flex:1,justifyContent:'center'}}>
-                    <View style={{borderColor:"orange",borderWidth:2,justifyContent:'center',
-                            alignItems:'center',padding:10,margin:10}}>
+                    <View style={{borderColor:"orange", borderWidth:2, justifyContent:'center',
+                            alignItems:'center', padding:10, margin:10}}>
                         <Text>Item Name</Text>
                         <Text>{this.state.requestedItemName}</Text>
                     </View>
-                    <View style={{borderColor:"orange",borderWidth:2,justifyContent:'center',
-                            alignItems:'center',padding:10,margin:10}}>
+                    <View style={{borderColor:"orange", borderWidth:2, justifyContent:'center', 
+                            alignItems:'center', padding:10, margin:10}}>
+                        <Text> Item Value </Text>
+                        <Text>{this.state.itemValue}</Text>
+                    </View>
+                    <View style={{borderColor:"orange", borderWidth:2, justifyContent:'center',
+                            alignItems:'center', padding:10, margin:10}}>
                         <Text> Item Status </Text>
                         <Text>{this.state.itemStatus}</Text>
                     </View>
             
-                    <TouchableOpacity style={{borderWidth:1,borderColor:'orange',backgroundColor:"orange",
-                                        width:300,alignSelf:'center',alignItems:'center',height:30,marginTop:30}}
+                    <TouchableOpacity style={{borderWidth:1, borderColor:'orange', backgroundColor:"orange",
+                                        width:300, alignSelf:'center', alignItems:'center', height:30, marginTop:30}}
                         onPress={()=>{
                             this.sendNotification()
                             this.updateExchangeRequestStatus();
@@ -200,10 +225,22 @@ export default class BookRequestScreen extends React.Component{
                             value = {this.state.description}
                         />
 
+                        <TextInput
+                            style={styles.formTextInput}
+                            placeholder ={"Item Value"}
+                            maxLength ={8}
+                            onChangeText={(text)=>{
+                                this.setState({
+                                    itemValue: text
+                                })
+                            }}
+                            value={this.state.itemValue}
+                        />
+
                         <TouchableOpacity 
                             style={styles.button}
                             onPress={()=>{
-                                this.addItem(this.state.itemName,this.state.description)
+                                this.addItem(this.state.itemName,this.state.description,this.state.itemValue)
                             }}>
                             <Text style={{color: '#ffff', fontSize:18, fontWeight:"bold"}}>Add Item</Text>
                         </TouchableOpacity>   

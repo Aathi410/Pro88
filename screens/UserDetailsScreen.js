@@ -14,6 +14,7 @@ export default class UserDetailsScreen extends React.Component{
       exchangeId       : this.props.navigation.getParam('details')["exchangeId"],
       itemName        : this.props.navigation.getParam('details')["item_name"],
       description  : this.props.navigation.getParam('details')["description"],
+      itemValue : this.props.navigation.getParam('details')["item_value"],
       recieverName    : '',
       recieverContact : '',
       recieverAddress : '',
@@ -104,9 +105,12 @@ componentDidMount(){
             <Card>
               <Text style={{fontWeight:'bold'}}>Reason : {this.state.description}</Text>
             </Card>
+            <Card>
+              <Text style={{fontWeight:'bold'}}>Price : {this.state.itemValue}</Text>
+            </Card>
           </Card>
         </View>
-        <View style={{flex:0.3}}>
+        <View style={{flex:0.3,marginTop:100}}>
           <Card
             title={"Reciever Information"}
             titleStyle= {{fontSize : 20}}
@@ -156,6 +160,7 @@ const styles = StyleSheet.create({
     alignItems:'center'
   },
   button:{
+    marginTop:93,
     width:200,
     height:50,
     justifyContent:'center',
